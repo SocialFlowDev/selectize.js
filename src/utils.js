@@ -321,6 +321,6 @@ var autoGrow = function($input) {
 	};
 
 	$input.on('keydown keyup update blur', debouncedUpdate);
-    var debouncedUpdate = debounce(update, 300);
+	var debouncedUpdate = debounce(update, 200);
 	update();
 };
