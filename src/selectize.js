@@ -1473,13 +1473,6 @@ $.extend(Selectize.prototype, {
 			}
 		});
 	},
-	removeItems: function(value, silent) {
-	    var items = $.isArray(values) ? values : [values];
-	    for (var i = 0, n = items.length; i < n; i++) {
-		this.isPending = (i < n - 1);
-		this.removeItem(items[i], silent);
-	    }
-	},
 
 	/**
 	 * Removes the selected item matching
@@ -1512,10 +1505,7 @@ $.extend(Selectize.prototype, {
 				self.setCaret(self.caretPos - 1);
 			}
 
-			if (!self.isPending) {
-				self.refreshState();
-			}
-
+			self.refreshState();
 			self.updatePlaceholder();
 			self.updateOriginalInput({silent: silent});
 			self.positionDropdown();
