@@ -441,7 +441,7 @@
 		};
 	
 		$input.on('keydown keyup update blur', debouncedUpdate);
-	    var debouncedUpdate = debounce(update, 300);
+		var debouncedUpdate = debounce(update, 200);
 		update();
 	};
 	
@@ -1921,6 +1921,13 @@
 				}
 			});
 		},
+		removeItems: function(value, silent) {
+		    var items = $.isArray(values) ? values : [values];
+		    for (var i = 0, n = items.length; i < n; i++) {
+			this.isPending = (i < n - 1);
+			this.removeItem(items[i], silent);
+		    }
+		},
 	
 		/**
 		 * Removes the selected item matching
@@ -1953,7 +1960,10 @@
 					self.setCaret(self.caretPos - 1);
 				}
 	
-				self.refreshState();
+				if (!self.isPending) {
+					self.refreshState();
+				}
+	
 				self.updatePlaceholder();
 				self.updateOriginalInput({silent: silent});
 				self.positionDropdown();
@@ -2793,113 +2803,6 @@
 		validity: SUPPORTS_VALIDITY_API
 	};
 	
-	
-	Selectize.define('drag_drop', function(options) {
-		if (!$.fn.sortable) throw new Error('The "drag_drop" plugin requires jQuery UI "sortable".');
-		if (this.settings.mode !== 'multi') return;
-		var self = this;
-	
-		self.lock = (function() {
-			var original = self.lock;
-			return function() {
-				var sortable = self.$control.data('sortable');
-				if (sortable) sortable.disable();
-				return original.apply(self, arguments);
-			};
-		})();
-	
-		self.unlock = (function() {
-			var original = self.unlock;
-			return function() {
-				var sortable = self.$control.data('sortable');
-				if (sortable) sortable.enable();
-				return original.apply(self, arguments);
-			};
-		})();
-	
-		self.setup = (function() {
-			var original = self.setup;
-			return function() {
-				original.apply(this, arguments);
-	
-				var $control = self.$control.sortable({
-					items: '[data-value]',
-					forcePlaceholderSize: true,
-					disabled: self.isLocked,
-					start: function(e, ui) {
-						ui.placeholder.css('width', ui.helper.css('width'));
-						$control.css({overflow: 'visible'});
-					},
-					stop: function() {
-						$control.css({overflow: 'hidden'});
-						var active = self.$activeItems ? self.$activeItems.slice() : null;
-						var values = [];
-						$control.children('[data-value]').each(function() {
-							values.push($(this).attr('data-value'));
-						});
-						self.setValue(values);
-						self.setActiveItem(active);
-					}
-				});
-			};
-		})();
-	
-	});
-	
-	Selectize.define('remove_button', function(options) {
-		if (this.settings.mode === 'single') return;
-	
-		options = $.extend({
-			label     : '&times;',
-			title     : 'Remove',
-			className : 'remove',
-			append    : true
-		}, options);
-	
-		var self = this;
-		var html = '<a href="javascript:void(0)" class="' + options.className + '" tabindex="-1" title="' + escape_html(options.title) + '">' + options.label + '</a>';
-	
-		/**
-		 * Appends an element as a child (with raw HTML).
-		 *
-		 * @param {string} html_container
-		 * @param {string} html_element
-		 * @return {string}
-		 */
-		var append = function(html_container, html_element) {
-			var pos = html_container.search(/(<\/[^>]+>\s*)$/);
-			return html_container.substring(0, pos) + html_element + html_container.substring(pos);
-		};
-	
-		this.setup = (function() {
-			var original = self.setup;
-			return function() {
-				// override the item rendering method to add the button to each
-				if (options.append) {
-					var render_item = self.settings.render.item;
-					self.settings.render.item = function(data) {
-						return append(render_item.apply(this, arguments), html);
-					};
-				}
-	
-				original.apply(this, arguments);
-	
-				// add event listener
-				this.$control.on('click', '.' + options.className, function(e) {
-					e.preventDefault();
-					if (self.isLocked) return;
-	
-					var $item = $(e.currentTarget).parent();
-					self.setActiveItem($item);
-					if (self.deleteSelection()) {
-						self.setCaret(self.items.length);
-					}
-				});
-	
-			};
-		})();
-	
-	});
 
 	return Selectize;
 }));
